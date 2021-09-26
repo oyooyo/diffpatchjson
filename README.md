@@ -58,15 +58,15 @@ let old_value, new_value, patched_value, delta;
 
 old_value = {
   "name": {
-		"first": "Max",
-		"last": "Masterman"
+    "first": "Max",
+    "last": "Masterman"
   },
   "date of birth": "1984-03-23"
 };
 new_value = {
   "name": {
-		"first": "Max",
-		"last": "Mustermann"
+    "first": "Max",
+    "last": "Mustermann"
   },
   "date of birth": "1984-03-23"
 };

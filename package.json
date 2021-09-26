@@ -1,0 +1,40 @@
+{
+	"name": "diffpatchjson",
+	"version": "0.1.0",
+	"description": "Diff & patch JSON values, using low-footprint deltas/diffs",
+	"keywords": [
+		"diff",
+		"patch",
+		"JSON"
+	],
+	"homepage": "https://github.com/oyooyo/diffpatchjson#readme",
+	"bugs": {
+		"url": "https://github.com/oyooyo/diffpatchjson/issues"
+	},
+	"license": "ISC",
+	"author": {
+		"name" : "oyooyo",
+		"url" : "https://github.com/oyooyo"
+	},
+	"files": [
+		"index.cjs",
+		"index.mjs",
+		"README.md"
+	],
+	"type": "module",
+	"main": "./index.cjs",
+	"exports": {
+		"import": "./index.mjs",
+		"require": "./index.cjs"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/oyooyo/diffpatchjson.git"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"engines": {
+		"node": ">=12"
+	}
+}

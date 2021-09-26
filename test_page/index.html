@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>diffpatchjson test page</title>
+		<link href="bootstrap.min.css" rel="stylesheet" />
+		<style>
+			body {
+				background-color: #E4E0DC;
+				background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAMCAYAAACji9dXAAAAE0lEQVQI12NgIARYmBgYGBiwEQABOgAPmGpdYwAAAABJRU5ErkJggg==");
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="h2">diffpatchjson test page</div>
+			<div class="my-2">
+				<label for="example_select" class="form-label">Examples:</label>
+				<select id="example_select" class="form-select" aria-label="Select example">
+					<option value="" selected>(Click to select)</option>
+				</select>
+			</div>
+			<div class="row">
+				<div class="col">
+					<div>
+						<label for="old_json_value" class="form-label">Old JSON value:</label>
+						<textarea class="form-control font-monospace" id="old_json_value" rows="13"></textarea>
+						<output id="old_json_value_error" for="old_json_value" class="mt-2 bg-danger d-block"></output>
+					</div>
+				</div>
+				<div class="col">
+					<div>
+						<label for="new_json_value" class="form-label">New JSON value:</label>
+						<textarea class="form-control font-monospace" id="new_json_value" rows="13"></textarea>
+						<output id="new_json_value_error" for="new_json_value" class="mt-2 bg-danger d-block"></output>
+					</div>
+				</div>
+			</div>
+			<div class="h2 mt-3">Delta / Diff</div>
+			<div class="row">
+				<div class="col">
+					<div>
+						<label for="diffpatchjson_delta" class="form-label">diffpatchjson:</label>
+						<textarea class="form-control font-monospace" id="diffpatchjson_delta" rows="5" readonly></textarea>
+					</div>
+					<div>
+						<label for="diffpatchjson_delta_length" class="form-label">Length:</label>
+						<output id="diffpatchjson_delta_length" for="diffpatchjson_delta" class="h5 fw-bold"></output>
+					</div>
+				</div>
+				<div class="col">
+					<div>
+						<label for="jsondiffpatch_delta" class="form-label">jsondiffpatch:</label>
+						<textarea class="form-control font-monospace" id="jsondiffpatch_delta" rows="5" readonly></textarea>
+					</div>
+					<div>
+						<label for="jsondiffpatch_delta_length" class="form-label">Length:</label>
+						<output id="jsondiffpatch_delta_length" for="jsondiffpatch_delta" class="h5 fw-bold"></output>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="jsondiffpatch.umd.js"></script>
+		<script src="index.mjs" type="module"></script>
+	</body>
+</html>

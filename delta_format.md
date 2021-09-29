@@ -52,21 +52,21 @@ The integer value `4` represents a delta where the new value is `undefined`. Whe
 ### TO_VALUE
 
 ```JavaScript
-[*X*]
+[X]
 ```
 
-An array that contains a single value *X* represents a delta where the new value is *X*.
+An array that contains a single value X represents a delta where the new value is X.
 
 
 ### FOR_ARRAY_OR_OBJECT
 
 ```JavaScript
-[*Operation_1_A*, *Operation_1_B*, *Operation_2_A*, *Operation_2_B*, *Operation_3_A*, *Operation_3_B*, ...]
+[Operation_1_A, Operation_1_B, Operation_2_A, Operation_2_B, Operation_3_A, Operation_3_B, ...]
 ```
 
 An array that contains an even number of elements represents a delta for an array or object. Think of this delta as a flattened version of an array of "Operations", where each "Operation" is an array with two elements A and B `[A, B]`:
 ```JavaScript
-[[*Operation_1_A*, *Operation_1_B*], [*Operation_2_A*, *Operation_2_B*], [*Operation_3_A*, *Operation_3_B*], ...]
+[[Operation_1_A, Operation_1_B], [Operation_2_A, Operation_2_B], [Operation_3_A, Operation_3_B], ...]
 ```
 
 Each "operation" represents a single change to an array or object. There are four different types of "operation"s:

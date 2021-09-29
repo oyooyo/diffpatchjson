@@ -113,10 +113,10 @@ const { are_deep_equal, deep_clone, diff, patch } = require('diffpatchjson');
 ### diff
 
 ```JavaScript
-diff(*old_value*, *new_value* [, *diff_options*])
+diff(old_value, new_value [, diff_options])
 ```
 
-Computes and returns the delta/difference between the JSON values *old_value* and *new_value*. The returned delta/diff is a JSON value as well.
+Computes and returns the delta/difference between the JSON values old_value and new_value. The returned delta/diff is a JSON value as well.
 
 #### diff options
 
@@ -129,7 +129,7 @@ In order to check two objects for equality, you can pass a function as the `are_
 ```JavaScript
 import { diff } from 'diffpatchjson';
 
-diff(*old_value*, *new_value*, {
+diff(old_value, new_value, {
   are_objects_equal: (object_1, object_2) = (object_1 === object_2),
 })
 ```
@@ -139,7 +139,7 @@ The module exports an `are_strict_equal` function by the way that does just the 
 ```JavaScript
 import { are_strict_equal, diff } from 'diffpatchjson';
 
-diff(*old_value*, *new_value*, {
+diff(old_value, new_value, {
   are_objects_equal: are_strict_equal,
 })
 ```
@@ -154,7 +154,7 @@ This usually requires some knowledge about the internal structure of the objects
 ```JavaScript
 import { diff } from 'diffpatchjson';
 
-diff(*old_value*, *new_value*, {
+diff(old_value, new_value, {
   compute_object_hash: (object) = object.id,
 })
 ```
@@ -164,7 +164,7 @@ The default behaviour of *diffpatchjson* by the way is that the "hash" of an obj
 ```JavaScript
 import { diff, stringify_json_value } from 'diffpatchjson';
 
-diff(*old_value*, *new_value*, {
+diff(old_value, new_value, {
   compute_object_hash: stringify_json_value,
 })
 ```
@@ -175,25 +175,25 @@ The results are being cached, so the function you pass as the `compute_object_ha
 ### patch
 
 ```JavaScript
-patch(*old_value*, *delta*)
+patch(old_value, delta)
 ```
 
-Patches *old_value* with a *delta* (created by the [`diff`](#diff) function) and returns the new/patched value.
+Patches old_value with a delta (created by the [`diff`](#diff) function) and returns the new/patched value.
 
 
 ### are_deep_equal
 
 ```JavaScript
-are_deep_equal(*value_1*, *value_2*)
+are_deep_equal(value_1, value_2)
 ```
 
-Helper function that compares *value_1* and *value_2* and returns a boolean value indicating if the values are "deep-equal". In JavaScript, booleans, numbers, strings etc. can easily be compared for equality using the strict equality operator `===` (e.g. `"foo" === "foo"` is `true`), but objects cannot (e.g. `{a:1} === {a:1}` is `false`). The `are_deep_equal` function can help in such cases (e.g. `are_deep_equal({a:1}, {a:1})` is `true`).
+Helper function that compares value_1 and value_2 and returns a boolean value indicating if the values are "deep-equal". In JavaScript, booleans, numbers, strings etc. can easily be compared for equality using the strict equality operator `===` (e.g. `"foo" === "foo"` is `true`), but objects cannot (e.g. `{a:1} === {a:1}` is `false`). The `are_deep_equal` function can help in such cases (e.g. `are_deep_equal({a:1}, {a:1})` is `true`).
 
 
 ### deep_clone
 
 ```JavaScript
-deep_clone(*value*)
+deep_clone(value)
 ```
 
-Helper function that returns a deep-cloned copy of the JSON value *value*.
+Helper function that returns a deep-cloned copy of the JSON value value.

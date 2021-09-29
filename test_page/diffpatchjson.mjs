@@ -1,1 +1,1 @@
-../../index.mjs
+../index.mjs

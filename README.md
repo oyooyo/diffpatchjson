@@ -35,7 +35,6 @@ There is a [test page](https://oyooyo.github.io/diffpatchjson/test_page/) where 
 
 - by passing the [`compute_object_hash`](#compute_object_hash) option (this is pretty much the same as the `objectHash` option in *jsondiffpatch*)
 - by passing the [`are_objects_equal`](#are_objects_equal) option
-- by passing the [`are_equal`](#are_equal) option
 
 
 ### No string diffs

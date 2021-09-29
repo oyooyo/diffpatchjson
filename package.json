@@ -1,6 +1,6 @@
 {
 	"name": "diffpatchjson",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Diff & patch JSON values, using low-footprint deltas/diffs",
 	"keywords": [
 		"diff",
@@ -17,6 +17,7 @@
 		"url" : "https://github.com/oyooyo"
 	},
 	"files": [
+		"delta_format.md",
 		"index.cjs",
 		"index.mjs",
 		"README.md"

@@ -1,4 +1,4 @@
-const get_keys_of = Object.keys;
+const get_keys_of_object = Object.keys;
 
 const get_length_of = ((value) =>
 	value.length
@@ -10,7 +10,7 @@ const get_type_of = ((value) =>
 	(typeof value)
 );
 
-const has_object_type = ((value) =>
+const is_of_type_object = ((value) =>
 	(get_type_of(value) === TYPEID_OBJECT)
 );
 
@@ -30,7 +30,7 @@ const get_typeid_of = ((value) =>
 	get_type_of(value)
 );
 
-const have_different_typeids = ((value_1, value_2) =>
+const are_of_different_typeids = ((value_1, value_2) =>
 	(get_typeid_of(value_1) !== get_typeid_of(value_2))
 );
 
@@ -39,16 +39,16 @@ const are_deep_equal = ((value_1, value_2) => {
 		// If the values are strict equal, then they are also deep equal
 		return true;
 	}
-	if (have_different_typeids(value_1, value_2)) {
+	if (are_of_different_typeids(value_1, value_2)) {
 		// If the values have differnt typeids, then they are not deep equal
 		return false;
 	}
-	if (! has_object_type(value_1)) {
+	if (! is_of_type_object(value_1)) {
 		// If the values have the same typeid, but they are neither strict equal nor of type "object", then they are not deep equal
 		return false;
 	}
-	const keys_of_value_1 = get_keys_of(value_1);
-	if (get_length_of(keys_of_value_1) !== get_length_of(get_keys_of(value_2))) {
+	const keys_of_value_1 = get_keys_of_object(value_1);
+	if (get_length_of(keys_of_value_1) !== get_length_of(get_keys_of_object(value_2))) {
 		// If the values have a different number of keys, then they are not deep equal
 		return false;
 	}
@@ -72,35 +72,16 @@ const are_strict_equal = ((value_1, value_2) =>
 	(value_1 === value_2)
 );
 
-const create_are_equal_function_from_get_object_id_function = ((get_object_id) =>
-	((value_1, value_2) =>
-		(
-			(value_1 === value_2)
-			|| (
-				(! have_different_typeids(value_1, value_2))
-				&& has_object_type(value_1)
-				&& (get_object_id(value_1) === get_object_id(value_2))
-			)
-		)
-	)
-);
-
-const DELTA_NO_DIFFERENCE = 0;
-
-const DELTA_TO_FALSE = 2;
-
-const DELTA_TO_NULL = 6;
-
-const DELTA_TO_TRUE = 3;
-
-const DELTA_TO_UNDEFINED = 4;
+const TYPEID_BOOLEAN = 'boolean';
 
 const TYPEID_NUMBER = 'number';
 
 const TYPEID_STRING = 'string';
 
-const create_delta_to_value = ((new_value) =>
-	[new_value]
+const TYPEID_UNDEFINED = 'undefined';
+
+const identity_function = ((value) =>
+	value
 );
 
 const create_array_function = ((function_name) =>
@@ -108,6 +89,89 @@ const create_array_function = ((function_name) =>
 		array[function_name](...args)
 	)
 );
+
+const map_array = create_array_function('map');
+
+const map_object = ((object, callback, this_arg=undefined) => {
+	const mapped_object = {};
+	for (let key of get_keys_of_object(object)) {
+		mapped_object[key] = callback.apply(this_arg, [object[key], key, object]);
+	}
+	return mapped_object;
+});
+
+const throw_invalid_value_typeid_error = ((value) => {
+	throw (new Error(`Invalid value type "${get_typeid_of(value)}": ${value}`));
+});
+
+const deep_clone = ((json_value) =>
+	({
+		[TYPEID_ARRAY]: ((array) => map_array(array, deep_clone)),
+		[TYPEID_BOOLEAN]: identity_function,
+		[TYPEID_NULL]: identity_function,
+		[TYPEID_NUMBER]: identity_function,
+		[TYPEID_OBJECT]: ((object) => map_object(object, deep_clone)),
+		[TYPEID_STRING]: identity_function,
+		[TYPEID_UNDEFINED]: identity_function,
+	}[get_typeid_of(json_value)] || throw_invalid_value_typeid_error)(json_value)
+);
+
+const create_are_equal_function_from_are_objects_equal_function = ((are_objects_equal) =>
+	((value_1, value_2) =>
+		(
+			(value_1 === value_2)
+			|| (
+				is_of_type_object(value_1)
+				&& (! are_of_different_typeids(value_1, value_2))
+				&& are_objects_equal(value_1, value_2)
+			)
+		)
+	)
+);
+
+const is_string = ((value) =>
+	(get_type_of(value) === TYPEID_STRING)
+);
+
+const create_are_objects_equal_function_from_compute_object_hash_function = ((compute_object_hash) => {
+	const objects_to_object_hashs_map = (new Map());
+	const object_hash_strings_to_object_hash_symbols_map = (new Map());
+	const compute_object_hash_cached = ((object) => {
+		if (! objects_to_object_hashs_map.has(object)) {
+			let object_hash = compute_object_hash(object);
+			if (is_string(object_hash)) {
+				if (! object_hash_strings_to_object_hash_symbols_map.has(object_hash)) {
+					object_hash_strings_to_object_hash_symbols_map.set(
+						object_hash,
+						Symbol(object_hash),
+					);
+				}
+				object_hash = object_hash_strings_to_object_hash_symbols_map.get(object_hash);
+			}
+			objects_to_object_hashs_map.set(object, object_hash);
+		}
+		return objects_to_object_hashs_map.get(object);
+	});
+	return ((value_1, value_2) =>
+		(compute_object_hash_cached(value_1) === compute_object_hash_cached(value_2))
+	);
+});
+
+const DELTA_NO_DIFFERENCE = 0;
+
+const DELTA_TO_FALSE = 2;
+
+const DELTA_TO_NULL = 3;
+
+const DELTA_TO_TRUE = 1;
+
+const DELTA_TO_UNDEFINED = 4;
+
+const create_delta_to_value = ((new_value) =>
+	[new_value]
+);
+
+const OPERATION_ID_MOVE = 8;
 
 const flatten_array = create_array_function('flat');
 
@@ -143,138 +207,170 @@ const is_delta_to_undefined = ((delta) =>
 	(delta === DELTA_TO_UNDEFINED)
 );
 
-const is_delta_to_value = ((delta) =>
-	(is_array(delta) && (get_length_of(delta) === 1))
+const is_array_of_length = ((value, length) =>
+	(is_array(value) && (get_length_of(value) === length))
+);
+
+const is_delta_to_value = ((value) =>
+	is_array_of_length(value, 1)
 );
 
 const is_delta = ((value) =>
 	(
 		is_delta_no_difference(value)
-		|| is_delta_to_undefined(value)
-		|| is_delta_to_null(value)
 		|| is_delta_to_true(value)
 		|| is_delta_to_false(value)
+		|| is_delta_to_null(value)
+		|| is_delta_to_undefined(value)
 		|| is_delta_to_value(value)
 		|| is_delta_for_array_or_object(value)
 	)
 );
 
-const is_integer = Number.isInteger;
-
-const is_string = ((value) =>
-	(get_type_of(value) === TYPEID_STRING)
-);
-
-const is_new_object_index = ((value) =>
-	((is_integer(value) && (value > 0)) || is_string(value))
-);
-
-const is_object_subdelta = ((value) =>
-	(is_array(value) && (get_length_of(value) === 2))
-);
-
-const is_object_subdelta_add = ((value) =>
+const is_delta_but_not_to_undefined = ((value) =>
 	(
-		is_object_subdelta(value)
-		&& is_new_object_index(value[0])
-		&& is_delta(value[1])
-		&& (! is_delta_to_undefined(value[1]))
+		is_delta(value)
+		&& (! is_delta_to_undefined(value))
 	)
 );
 
-const is_old_object_index = ((value) =>
-	(is_integer(value) && (value < 0))
+const is_operation = ((value) =>
+	is_array_of_length(value, 2)
 );
 
-const is_object_subdelta_delete = ((value) =>
+const is_integer = Number.isInteger;
+
+const is_property_id_of_new_array_or_object = ((value) =>
+	((is_integer(value) && (value < 0)) || is_string(value))
+);
+
+const is_operation_add = ((value) =>
 	(
-		is_object_subdelta(value)
-		&& is_old_object_index(value[0])
+		is_operation(value)
+		&& is_property_id_of_new_array_or_object(value[0])
+		&& is_delta_but_not_to_undefined(value[1])
+	)
+);
+
+const OPERATION_ID_COPY = 9;
+
+const is_property_id_of_old_array_or_object = ((value) =>
+	(is_integer(value) && (value > 0))
+);
+
+const is_property_id_of_array_or_object = ((value) =>
+	(
+		is_property_id_of_old_array_or_object(value)
+		|| is_property_id_of_new_array_or_object(value)
+	)
+);
+
+const is_multiple_properties_operation_with_id = ((value, operation_id) =>
+	(
+		is_operation(value)
+		&& (value[1] === operation_id)
+		&& is_array_of_length(value[0], 2)
+		&& is_property_id_of_old_array_or_object(value[0][0])
+		&& is_property_id_of_array_or_object(value[0][1])
+	)
+);
+
+const is_operation_copy = ((value) =>
+	is_multiple_properties_operation_with_id(value, OPERATION_ID_COPY)
+);
+
+const is_operation_move = ((value) =>
+	is_multiple_properties_operation_with_id(value, OPERATION_ID_MOVE)
+);
+
+const is_operation_remove = ((value) =>
+	(
+		is_operation(value)
+		&& is_property_id_of_old_array_or_object(value[0])
 		&& is_delta_to_undefined(value[1])
 	)
 );
 
-const is_object_subdelta_move = ((value) =>
+const is_operation_replace = ((value) =>
 	(
-		is_object_subdelta(value)
-		&& is_new_object_index(value[0])
-		&& is_old_object_index(value[1])
+		is_operation(value)
+		&& is_property_id_of_old_array_or_object(value[0])
+		&& is_delta_but_not_to_undefined(value[1])
 	)
 );
 
-const is_object_subdelta_replace = ((value) =>
-	(
-		is_object_subdelta(value)
-		&& is_old_object_index(value[0])
-		&& is_delta(value[1])
-		&& (! is_delta_to_undefined(value[1]))
+const get_sort_index_of_operation = ((operation) =>
+	(is_array(operation[0])
+		? operation[0][1]
+		: operation[0]
 	)
 );
 
 const sort_array_inplace = create_array_function('sort');
 
-const sort_subdeltas_inplace = ((subdeltas) =>
-	sort_array_inplace(subdeltas, ((subdelta_1, subdelta_2) => 
-		(subdelta_1[0] - subdelta_2[0])
+const sort_operations_inplace = ((operations) =>
+	sort_array_inplace(operations, ((operation_1, operation_2) => 
+		(get_sort_index_of_operation(operation_2) - get_sort_index_of_operation(operation_1))
 	))
 );
 
-const split_and_sort_subdeltas = ((subdeltas) =>
+const split_and_sort_operations = ((operations) =>
 	[
-		sort_subdeltas_inplace(filter_array(subdeltas, is_object_subdelta_move)),
-		sort_subdeltas_inplace(filter_array(subdeltas, is_object_subdelta_replace)),
-		sort_subdeltas_inplace(filter_array(subdeltas, is_object_subdelta_delete)),
-		sort_subdeltas_inplace(filter_array(subdeltas, is_object_subdelta_add)),
+		sort_operations_inplace(filter_array(operations, is_operation_copy)),
+		sort_operations_inplace(filter_array(operations, is_operation_move)),
+		sort_operations_inplace(filter_array(operations, is_operation_replace)),
+		sort_operations_inplace(filter_array(operations, is_operation_remove)),
+		sort_operations_inplace(filter_array(operations, is_operation_add)),
 	]
 );
 
-const convert_property_changes_to_object_delta = ((property_changes, diff_options) => {
-	const {are_equal} = diff_options;
-	const subdeltas = [];
-	// Loop over all property changes looking for "add"/"remove" pairs that can be described as a "move"
+const convert_property_changes_to_delta_for_array_or_object = ((property_changes, are_equal) => {
+	const operations = [];
+	// Loop over all property changes looking for property changes that can be described as a "move"
 	for (let target_property_change of property_changes) {
-		if (
-			is_undefined(target_property_change[1])
-			&& (! is_undefined(target_property_change[2]))
-		) {
+		if (! is_undefined(target_property_change[2])) {
 			for (let source_property_change of property_changes) {
 				if (
 					(! is_undefined(source_property_change[1]))
 					&& is_undefined(source_property_change[2])
-					&& are_equal(source_property_change[1], target_property_change[2])
 				) {
-					push_to_array(subdeltas, [
-						target_property_change[0],
-						source_property_change[0],
-					]);
-					// Set all property changes that have been replaced with a "move" to empty arrays
-					target_property_change.length = source_property_change.length = 0;
+					if (are_equal(source_property_change[1], target_property_change[2])) {
+						push_to_array(operations, [
+							[
+								source_property_change[0],
+								target_property_change[0],
+							],
+							OPERATION_ID_MOVE,
+						]);
+						// Set all property changes that have been replaced with a "move" to empty arrays
+						target_property_change.length = source_property_change.length = 0;
+					}
 				}
 			}
 		}
 	}
-	// Convert the remaining (non-"move" and not replaced) property changes to subdeltas
+	// Convert the remaining (non-"move" and not replaced) property changes to operations
 	for (let property_change of property_changes) {
-		const subdelta_delta = diff(
+		const operation_delta = diff(
 			property_change[1],
 			property_change[2],
-			diff_options,
+			are_equal,
 		);
-		if (! is_delta_no_difference(subdelta_delta)) {
-			push_to_array(subdeltas, [
+		if (! is_delta_no_difference(operation_delta)) {
+			push_to_array(operations, [
 				property_change[0],
-				subdelta_delta,
+				operation_delta,
 			]);
 		}
 	}
-	// Return a flattened array version of the subdeltas, or DELTA_NO_DIFFERENCE if there are no subdeltas
-	return ((get_length_of(subdeltas) > 0)
-		? flatten_array(split_and_sort_subdeltas(subdeltas), 2)
+	// Return a flattened array version of the operations, or DELTA_NO_DIFFERENCE if there are no operations
+	return ((get_length_of(operations) > 0)
+		? flatten_array(split_and_sort_operations(operations), 2)
 		: DELTA_NO_DIFFERENCE
 	);
 });
 
-const get_lcsl_table_at = ((lcsl_table, row_index, column_index) =>
+const get_lcsl_table_cell_at = ((lcsl_table, row_index, column_index) =>
 	(((row_index < 0) || (column_index < 0))
 		? -1
 		: lcsl_table[row_index][column_index]
@@ -304,8 +400,7 @@ const get_minimum_of = Math.min;
 
 const slice_array = create_array_function('slice');
 
-const diff_arrays = ((old_array, new_array, diff_options) => {
-	const {are_equal} = diff_options;
+const diff_arrays = ((old_array, new_array, are_equal) => {
 	const old_array_length = get_length_of(old_array);
 	const new_array_length = get_length_of(new_array);
 	const minimum_array_length = get_minimum_of(old_array_length, new_array_length);
@@ -344,25 +439,25 @@ const diff_arrays = ((old_array, new_array, diff_options) => {
 	let lcsl_table_row_index = (new_array_length - number_of_equal_elements_at_start - number_of_equal_elements_at_end);
 	let lcsl_table_column_index = (old_array_length - number_of_equal_elements_at_start - number_of_equal_elements_at_end);
 	while((lcsl_table_column_index > 0) || (lcsl_table_row_index > 0)) {
-		const left_cell_value = get_lcsl_table_at(lcsl_table, lcsl_table_row_index, (lcsl_table_column_index - 1));
-		const up_cell_value = get_lcsl_table_at(lcsl_table, (lcsl_table_row_index - 1), lcsl_table_column_index);
+		const left_cell_value = get_lcsl_table_cell_at(lcsl_table, lcsl_table_row_index, (lcsl_table_column_index - 1));
+		const up_cell_value = get_lcsl_table_cell_at(lcsl_table, (lcsl_table_row_index - 1), lcsl_table_column_index);
 		const old_array_index = (lcsl_table_column_index + number_of_equal_elements_at_start - 1);
 		const new_array_index = (lcsl_table_row_index + number_of_equal_elements_at_start - 1);
 		if (left_cell_value > up_cell_value) {
-			// Value was deleted
+			// Value was removed
 			push_to_array(property_changes,
 				[
-					-(old_array_index + 1),
+					+(old_array_index + 1),
 					old_array[old_array_index],
 					undefined,
 				],
 			);
 			lcsl_table_column_index--;
 		} else if (up_cell_value > left_cell_value) {
-			// Value was added/inserted
+			// Value was added
 			push_to_array(property_changes,
 				[
-					+(new_array_index + 1),
+					-(new_array_index + 1),
 					undefined,
 					new_array[new_array_index],
 				],
@@ -370,10 +465,21 @@ const diff_arrays = ((old_array, new_array, diff_options) => {
 			lcsl_table_row_index--;
 		} else {
 			// Value was either not changed or replaced
-			if (get_lcsl_table_at(lcsl_table, lcsl_table_row_index, lcsl_table_column_index) === get_lcsl_table_at(lcsl_table, (lcsl_table_row_index - 1), (lcsl_table_column_index - 1))) {
+			if (
+				get_lcsl_table_cell_at(
+					lcsl_table,
+					lcsl_table_row_index,
+					lcsl_table_column_index,
+				)
+				=== get_lcsl_table_cell_at(
+					lcsl_table,
+					(lcsl_table_row_index - 1),
+					(lcsl_table_column_index - 1),
+				)
+			) {
 				// Value was replaced
 				push_to_array(property_changes, [
-					-(old_array_index + 1),
+					+(old_array_index + 1),
 					old_array[old_array_index],
 					new_array[new_array_index],
 				]);
@@ -382,40 +488,43 @@ const diff_arrays = ((old_array, new_array, diff_options) => {
 			lcsl_table_row_index--;
 		}
 	}
-	return convert_property_changes_to_object_delta(
+	return convert_property_changes_to_delta_for_array_or_object(
 		property_changes,
-		diff_options,
+		are_equal,
 	);
 });
 
-const diff_numbers = ((old_number, new_number, diff_options) =>
+const diff_numbers = ((old_number, new_number, are_equal) =>
 	create_delta_to_value(new_number)
 );
 
 const get_array_index = create_array_function('indexOf');
 
-const get_sorted_keys_of_object_or_array = ((object_or_array) =>
-	(is_array(object_or_array)
-		? get_keys_of(object_or_array)
-		: sort_array_inplace(get_keys_of(object_or_array))
+const get_keys_of_array = ((array) =>
+	create_array_from(array, ((value, index) => index))
+);
+
+const get_sorted_keys_of = ((array_or_object) =>
+	(is_array(array_or_object)
+		? get_keys_of_array(array_or_object)
+		: sort_array_inplace(get_keys_of_object(array_or_object))
 	)
 );
 
-const map_array = create_array_function('map');
+const is_in_array = create_array_function('includes');
 
 const remove_duplicates_from_array = ((array) =>
 	[...(new Set(array))]
 );
 
-const diff_objects = ((old_object, new_object, diff_options) => {
-	const {are_equal} = diff_options;
-	const old_keys = get_sorted_keys_of_object_or_array(old_object);
-	return convert_property_changes_to_object_delta(
+const diff_objects = ((old_object, new_object, are_equal) => {
+	const old_keys = get_sorted_keys_of(old_object);
+	return convert_property_changes_to_delta_for_array_or_object(
 		map_array(
 			filter_array(
 				remove_duplicates_from_array([
-					...get_keys_of(old_object),
-					...get_keys_of(new_object),
+					...get_keys_of_object(old_object),
+					...get_keys_of_object(new_object),
 				]),
 				((property_key) =>
 					(! are_equal(
@@ -426,20 +535,20 @@ const diff_objects = ((old_object, new_object, diff_options) => {
 			),
 			((property_key) =>
 				[
-					(is_undefined(old_object[property_key])
-						? property_key
-						: -(get_array_index(old_keys, property_key) + 1)
+					(is_in_array(old_keys, property_key)
+						? +(get_array_index(old_keys, property_key) + 1)
+						: property_key
 					),
 					old_object[property_key],
 					new_object[property_key],
 				]
 			),
 		),
-		diff_options,
+		are_equal,
 	);
 });
 
-const diff_strings = ((old_string, new_string, diff_options) =>
+const diff_strings = ((old_string, new_string, are_equal) =>
 	create_delta_to_value(new_string)
 );
 
@@ -451,131 +560,134 @@ const is_true = ((value) =>
 	(value === true)
 );
 
-const throw_invalid_value_typeid_error = ((old_value, new_value, diff_options) => {
-	throw (new Error(`Invalid value type "${get_typeid_of(old_value)}": ${old_value}`));
-});
-
-const diff = ((old_value, new_value, diff_options) =>
-	(old_value === new_value) ? DELTA_NO_DIFFERENCE :
-	is_undefined(new_value) ? DELTA_TO_UNDEFINED :
-	is_null(new_value) ? DELTA_TO_NULL :
+const diff = ((old_value, new_value, are_equal) =>
+	are_equal(old_value, new_value) ? DELTA_NO_DIFFERENCE :
 	is_true(new_value) ? DELTA_TO_TRUE :
 	is_false(new_value) ? DELTA_TO_FALSE :
-	have_different_typeids(old_value, new_value) ? create_delta_to_value(new_value) :
+	is_null(new_value) ? DELTA_TO_NULL :
+	is_undefined(new_value) ? DELTA_TO_UNDEFINED :
+	are_of_different_typeids(old_value, new_value) ? create_delta_to_value(new_value) :
 	({
 		[TYPEID_ARRAY]: diff_arrays,
 		[TYPEID_NUMBER]: diff_numbers,
 		[TYPEID_OBJECT]: diff_objects,
 		[TYPEID_STRING]: diff_strings,
-	}[get_typeid_of(old_value)] || throw_invalid_value_typeid_error)(old_value, new_value, diff_options)
+	}[get_typeid_of(old_value)] || throw_invalid_value_typeid_error)(old_value, new_value, are_equal)
 );
 
-const TYPEID_FUNCTION = 'function';
+const join_array = create_array_function('join');
 
-const is_function = ((value) =>
-	(get_type_of(value) === TYPEID_FUNCTION)
+const stringify_json = JSON.stringify;
+
+const stringify_json_value = ((json_value) =>
+	({
+		[TYPEID_ARRAY]: ((array) => `[${join_array(map_array(array, stringify_json), ',')}]`),
+		[TYPEID_BOOLEAN]: stringify_json,
+		[TYPEID_NULL]: stringify_json,
+		[TYPEID_NUMBER]: stringify_json,
+		[TYPEID_OBJECT]: ((object) => `{${map_array(sort_array_inplace(get_keys_of_object(object)), ((key) => `"${key}":${stringify_json_value(object[key])}`))}}`),
+		[TYPEID_STRING]: stringify_json,
+		[TYPEID_UNDEFINED]: (() => TYPEID_UNDEFINED),
+	}[get_typeid_of(json_value)] || throw_invalid_value_typeid_error)(json_value)
 );
 
-const diff_deep_equal = ((
+const diff_with_options = ((
 	old_value,
 	new_value,
 	{
-		get_object_id,
-		are_equal=(is_function(get_object_id)
-			? create_are_equal_function_from_get_object_id_function(get_object_id)
-			: are_deep_equal
-		),
+		compute_object_hash=stringify_json_value,
+		are_objects_equal=create_are_objects_equal_function_from_compute_object_hash_function(compute_object_hash),
+		are_equal=create_are_equal_function_from_are_objects_equal_function(are_objects_equal),
 	} = {},
 ) =>
-	diff(old_value, new_value, {
-		are_equal: are_equal,
-	})
-);
-
-const diff_strict_equal = ((
-	old_value,
-	new_value,
-	{
-		get_object_id,
-		are_equal=(is_function(get_object_id)
-			? create_are_equal_function_from_get_object_id_function(get_object_id)
-			: are_strict_equal
-		),
-	} = {},
-) =>
-	diff(old_value, new_value, {
-		are_equal: are_equal,
-	})
+	diff(old_value, new_value, are_equal)
 );
 
 const get_absolute_value_of = Math.abs;
 
-const convert_object_index_to_index = ((object_index) =>
-	(get_absolute_value_of(object_index) - 1)
-);
-
-const convert_object_index_to_key = ((object_index, old_keys) =>
-	is_string(object_index) ? object_index :
-	is_old_object_index(object_index) ? old_keys[convert_object_index_to_index(object_index)] :
-	convert_object_index_to_index(object_index)
+const convert_property_id_to_property_key = ((property_id, old_property_keys) =>
+	is_string(property_id) ? property_id :
+	is_property_id_of_old_array_or_object(property_id) ? old_property_keys[property_id - 1] :
+	(get_absolute_value_of(property_id) - 1)
 );
 
 const splice_array = create_array_function('splice');
 
-const split_into_chunks = ((sliceable, length, offset=0) => {
+const split_into_chunks = ((sliceable, chunk_length, offset=0) => {
 	const chunks = [];
 	while (offset < get_length_of(sliceable)) {
-		push_to_array(chunks, sliceable.slice(offset, (offset + length)));
-		offset += length;
+		push_to_array(chunks,
+			slice_array(sliceable,
+				offset,
+				(offset + chunk_length),
+			),
+		);
+		offset += chunk_length;
 	}
 	return chunks;
 });
 
 const patch_array_or_object = ((old_array_or_object, delta) => {
-	const [move_subdeltas, replace_subdeltas, delete_subdeltas, add_subdeltas] = split_and_sort_subdeltas(split_into_chunks(delta, 2));
-	// Replace all "move" subdeltas with "add"/"delete" subdelta pairs
-	const old_keys = get_sorted_keys_of_object_or_array(old_array_or_object);
-	for (let move_subdelta of move_subdeltas) {
-		push_to_array(delete_subdeltas, [
-			move_subdelta[1],
-			DELTA_TO_UNDEFINED,
-		]);
-		push_to_array(add_subdeltas, [
-			move_subdelta[0],
-			create_delta_to_value(old_array_or_object[convert_object_index_to_key(move_subdelta[1], old_keys)]),
-		]);
+	const [
+		copy_operations,
+		move_operations,
+		replace_operations,
+		remove_operations,
+		add_operations,
+	] = split_and_sort_operations(split_into_chunks(delta, 2));
+	const old_keys = get_sorted_keys_of(old_array_or_object);
+	// Replace all "copy" and "move" operations with "add"/"remove"/"replace" operations
+	for (let operation of [...copy_operations, ...move_operations]) {
+		const from_property_id = operation[0][0];
+		const to_property_id = operation[0][1];
+		if (is_operation_move(operation)) {
+			push_to_array(remove_operations, [
+				from_property_id,
+				DELTA_TO_UNDEFINED,
+			]);
+		}
+		push_to_array(
+			(is_property_id_of_old_array_or_object(to_property_id)
+				? replace_operations
+				: add_operations
+			),
+			[
+				to_property_id,
+				create_delta_to_value(old_array_or_object[convert_property_id_to_property_key(from_property_id, old_keys)]),
+			]
+		);
 	}
-	// Sort the add and delete subdelta arrays again
-	sort_subdeltas_inplace(add_subdeltas);
-	sort_subdeltas_inplace(delete_subdeltas);
+	// Sort the add and delete operation arrays again
+	sort_operations_inplace(add_operations);
+	sort_operations_inplace(remove_operations);
 	// Now comes the actual patching
 	const new_array_or_object = (is_array(old_array_or_object)
 		? [...old_array_or_object]
 		: {...old_array_or_object}
 	);
-	// Step 1: Apply the "replace" subdeltas
-	for (let replace_subdelta of replace_subdeltas) {
-		const key = convert_object_index_to_key(replace_subdelta[0], old_keys);
+	// Step 1: Apply the "replace" operations
+	for (let replace_operation of replace_operations) {
+		const key = convert_property_id_to_property_key(replace_operation[0], old_keys);
 		new_array_or_object[key] = patch(
 			old_array_or_object[key],
-			replace_subdelta[1],
+			replace_operation[1],
 		);
 	}
-	// Step 2: Apply the "delete" subdeltas
-	for (let delete_subdelta of delete_subdeltas) {
-		const key = convert_object_index_to_key(delete_subdelta[0], old_keys);
+	// Step 2: Apply the "remove" operations
+	for (let remove_operation of remove_operations) {
+		const key = convert_property_id_to_property_key(remove_operation[0], old_keys);
 		if (is_array(new_array_or_object)) {
 			splice_array(new_array_or_object, key, 1);
 		} else {
 			delete new_array_or_object[key];
 		}
 	}
-	// Step 3: Apply the "add" subdeltas
-	for (let add_subdelta of add_subdeltas) {
-		const key = convert_object_index_to_key(add_subdelta[0], old_keys);
+	// Step 3: Apply the "add" operations
+	for (let add_operation of add_operations) {
+		const key = convert_property_id_to_property_key(add_operation[0], old_keys);
 		const new_property_value = patch(
 			undefined,
-			add_subdelta[1],
+			add_operation[1],
 		);
 		if (is_array(new_array_or_object)) {
 			splice_array(new_array_or_object, key, 0, new_property_value);
@@ -597,10 +709,10 @@ const throw_invalid_delta_error = ((old_value, delta) => {
 
 const patch = ((old_value, delta) =>
 	is_delta_no_difference(delta) ? old_value :
-	is_delta_to_undefined(delta) ? undefined :
-	is_delta_to_null(delta) ? null :
 	is_delta_to_true(delta) ? true :
 	is_delta_to_false(delta) ? false :
+	is_delta_to_null(delta) ? null :
+	is_delta_to_undefined(delta) ? undefined :
 	is_delta_to_value(delta) ? delta[0] :
 	({
 		[TYPEID_ARRAY]: patch_array,
@@ -611,8 +723,8 @@ const patch = ((old_value, delta) =>
 module.exports = {
 	are_deep_equal: are_deep_equal,
 	are_strict_equal: are_strict_equal,
+	deep_clone: deep_clone,
+	diff: diff_with_options,
 	patch: patch,
-	diff: diff_strict_equal,
-	diff_deep_equal: diff_deep_equal,
-	diff_strict_equal: diff_strict_equal,
+	stringify_json_value: stringify_json_value,
 };

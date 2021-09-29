@@ -1,1 +1,0 @@
-../delta_format.md
